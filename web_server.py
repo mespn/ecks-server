@@ -3,7 +3,9 @@ import threading
 import sys
 import os
 
-def handle_client(client):
+def handle_client(client: socket.socket):
+    message = client.recv(1024)
+    msg_dict = parse_request(message)
     pass
 
 def main():
