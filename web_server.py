@@ -2,11 +2,11 @@ import socket
 import threading
 import sys
 import os
+from http_parser import parse_request
 
 def handle_client(client: socket.socket):
     message = client.recv(1024)
     msg_dict = parse_request(message)
-    pass
 
 def main():
     SOCK_ADDR = ("", 8200)
