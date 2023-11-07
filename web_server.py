@@ -58,17 +58,22 @@ def send_body(socket, path, code = 200):
     message = full_response(code, path)
     send_response(socket, message)
 
-def send_error(socket, error_code, server_path):
+def send_error(socket, error_code, server_path = None):
     error_code = str(error_code)
-    error_page = os.path.join(server_path, error_code + ".html")
+
+    if server_path:
+        error_page = os.path.join(server_path, error_code + ".html")
+    else:
+        error_page = ""
+
     if find_file(error_page):
         send_body(socket, error_page, code = error_code)
     else:
         send_response(socket, response_header(error_code))
 
 def login(sock, request):
-    headers = ["Set-Cookie: sessionID = " + str(uuid.uuid4()),
-               "Set-Cookie: username = " + request["Content"]["username"]
+    headers = ["Set-Cookie: sessionID=" + str(uuid.uuid4()),
+               "Set-Cookie: username=" + request["Content"]["username"]
                ]
     msg = api_header(headers)
     send_response(sock, msg)
@@ -133,8 +138,10 @@ def handle_api(client_socket, request, db_socket = None):
             
             elif re.match("^api\/login\/.*$",clean_path):
                 tweet_id = clean_path.split("/")[-1]
-                if request["Method"] == "POST":
+                if request["Method"] == "PUT":
                     update_tweet(db_socket, request, tweet_id)
+            else:
+                send_error(client_socket, 400)
 
         except KeyError:
             raise ForbiddenError
