@@ -5,6 +5,7 @@ import os
 import traceback
 import uuid
 import re
+from db_comms import *
 from http_parser import *
 from http_responses import response_header, full_header, full_response, api_header
 from http_exceptions import *
@@ -127,7 +128,7 @@ def handle_api(client_socket, request, db_socket = None):
 
             if clean_path == "api/tweet":
                 if request["Method"] == "GET":
-                    get_tweets(db_socket, request)
+                    get_tweets(db_socket)
                 elif request["Method"] == "POST":
                     set_tweet(db_socket, request)
             
