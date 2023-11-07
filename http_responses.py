@@ -139,6 +139,6 @@ def full_response(code, path):
 
 def api_header(headers: list, code: str = "200"):
     base = response_header(code).decode("utf-8")
-    for i in headers.keys():
+    for i in headers:
         base += i +"\r\n"
     return (base + "\r\n").encode()
