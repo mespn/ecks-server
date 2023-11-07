@@ -26,6 +26,18 @@ def check_format(request):
         i = i.split(": ",1)
         if len(i) != 2:
             raise BadRequestError
+        
+def parse_cookie(cookie_str):
+    cookie_dict = {}
+    cookies = cookie_str.split(";")
+    for i in cookies:
+        try:
+            (key, value) = i.split("=")
+            cookie_dict[key] = value
+        except ValueError:
+            cookie_dict[key] = None
+    return cookie_dict
+
 
 def parse_request(http_request:str):
     '''
