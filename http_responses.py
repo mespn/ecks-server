@@ -136,3 +136,9 @@ def full_response(code, path):
     header = full_header(code, path)
     body = response_body(path)
     return b"\r\n".join((header,body))
+
+def api_header(headers: list, code: str = "200"):
+    base = response_header(code).decode("utf-8")
+    for i in headers.keys():
+        base += i +"\r\n"
+    return (base + "\r\n").encode()

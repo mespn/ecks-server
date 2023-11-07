@@ -3,8 +3,9 @@ import threading
 import sys
 import os
 import traceback
+import uuid
 from http_parser import *
-from http_responses import response_header, full_header, full_response
+from http_responses import response_header, full_header, full_response, api_header
 
 # =================================
 # Custom exceptions
@@ -37,6 +38,13 @@ def find_file(path):
 
     return True
 
+def path_is_api(path):
+    try:
+        p = path.strip("/").split("/")
+        return p[0] == "api"
+    except:
+        raise BadRequestError
+
 def check_is_directory(path):
     try:
         f = open(path, 'rb')
@@ -67,6 +75,11 @@ def send_error(socket, error_code, server_path):
         send_body(socket, error_page, code = error_code)
     else:
         send_response(socket, response_header(error_code))
+
+def login(socket, request):
+    headers = ["Set-Cookie: sessionID = " + str(uuid.uuid4()),
+               "Set-Cookie: username = " + request["Content"]["username"]
+               ]
 
 # -------------------------------------------------
 # process_request(socket, method, path) raises BadRequestError, FileNotFoundError, InternalError
@@ -101,6 +114,26 @@ def process_request(socket: socket.socket, req:dict):
         send_response(socket, 400)
 
 # -------------------------------------------------
+# handle_api(request)
+#
+# [Add description]
+# 
+# request - 
+# 
+# returns 
+# -------------------------------------------------
+def handle_api(client_socket, request, db_socket = None): 
+    clean_path = request["Path"].strip("/")
+    if clean_path == "api/login" and request["Method"] == "POST":
+        login(client_socket, request)
+    elif clean_path == "api/tweet":
+        if request["Method"] == "GET":
+            pass
+        elif request["Method"] == "POST":
+            pass
+        
+
+# -------------------------------------------------
 # handle_client(sock, path)
 #
 # [Add description]
@@ -116,7 +149,11 @@ def handle_client(sock: socket.socket, server_path: str):
     if data:
         try:
             headers = parse_request(data)
-            headers["Path"] = server_path + headers["Path"]
+            if path_is_api(headers["Path"]):
+                handle_api(sock, headers)
+            else:
+                headers["Path"] = server_path + headers["Path"]
+                process_request(sock, headers)
         except BadRequestError:
             send_error(sock, 400, server_path)
             return
@@ -124,22 +161,11 @@ def handle_client(sock: socket.socket, server_path: str):
         except TypeError:
             send_error(sock, 500, server_path)
             return
+        except FileNotFoundError:
+            send_error(sock, 404, server_path)
+            return
     else:
         return
-   
-    try:
-        process_request(sock, headers)
-
-    except BadRequestError:
-        send_error(sock, 400, server_path)
-        return
-        
-    except TypeError:
-        send_error(sock, 500, server_path)
-        return
-    
-    except FileNotFoundError:
-        send_error(sock, 404, server_path)
     
 def main(args):
     PATH = os.path.abspath("ecks")
