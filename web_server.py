@@ -8,6 +8,7 @@ import re
 from http_parser import *
 from http_responses import response_header, full_header, full_response, api_header
 from http_exceptions import *
+from db_comms import Database
 
 # -------------------------------------------------
 # find_file(path)
@@ -132,14 +133,14 @@ def handle_api(client_socket, request, db_socket = None):
 
             if clean_path == "api/tweet":
                 if request["Method"] == "GET":
-                    get_tweets(db_socket, request)
+                    Database.get_tweets()
                 elif request["Method"] == "POST":
-                    set_tweet(db_socket, request)
+                    Database.set_tweet(tweet_id, request)
             
             elif re.match("^api\/login\/.*$",clean_path):
                 tweet_id = clean_path.split("/")[-1]
                 if request["Method"] == "PUT":
-                    update_tweet(db_socket, request, tweet_id)
+                    Database.set_tweet(db_socket, request, tweet_id)
             else:
                 send_error(client_socket, 400)
 
