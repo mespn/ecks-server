@@ -1,6 +1,5 @@
 import socket
 import json
-import pickle
 
 class Database():
     HOST = "localhost"
@@ -67,11 +66,11 @@ class Database():
 
 def main():
 
-    t_id = "key"
-    cookie = {"username":"manuel", "session-id":"agafvDASASDCa-fasdf"}
-    tweet = "Holi serv!"
+    # t_id = "other_key"
+    # cookie = {"username":"manuel", "session-id":"agafvDASASDCa-fasdf"}
+    # tweet = "Holi serv!"
 
-    Database.set_tweet(t_id, tweet, cookie)
+    # Database.set_tweet(t_id, tweet, cookie)
 
     print(Database.get_tweets())
 
