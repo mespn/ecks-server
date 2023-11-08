@@ -120,7 +120,7 @@ def process_request(socket: socket.socket, req:dict):
 # 
 # returns 
 # -------------------------------------------------
-def handle_api(client_socket, request, db_socket = None): 
+def handle_api(client_socket, request): 
     clean_path = request["Path"].strip("/")
     if clean_path == "api/login" and request["Method"] == "POST":
         login(client_socket, request)
@@ -140,7 +140,7 @@ def handle_api(client_socket, request, db_socket = None):
             elif re.match("^api\/login\/.*$",clean_path):
                 tweet_id = clean_path.split("/")[-1]
                 if request["Method"] == "PUT":
-                    Database.set_tweet(db_socket, request, tweet_id)
+                    Database.set_tweet(request, tweet_id)
             else:
                 send_error(client_socket, 400)
 
