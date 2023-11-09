@@ -54,13 +54,18 @@ function loadTweets () {
         </button>`;
       }
 
-      tweetDiv.innerHTML = '<ul>';
+      if (Object.keys (tweetList).length == 0) {
+        tweetDiv.innerHTML =
+          '<p>There are no tweets here.</p> <p>Post the very first tweet!</p>';
+      } else {
+        tweetDiv.innerHTML = '<ul>';
 
-      for (i in tweetList) {
-        tweetDiv.innerHTML += tweet_item (i, tweetList[i]);
+        for (i in tweetList) {
+          tweetDiv.innerHTML += tweet_item (i, tweetList[i]);
+        }
+
+        tweetDiv.innerHTML += '</ul>';
       }
-
-      tweetDiv.innerHTML += '</ul>';
     } else {
       tweetDiv.innerText = 'Could not get tweets';
     }
