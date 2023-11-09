@@ -1,3 +1,5 @@
+# Protocol
+
 ## WEB SERVER -> DB SERVER
 
 ### Ask for Database
@@ -110,6 +112,7 @@
 ```
 
 ### Response to LOCK
+
 ``` json
 { 
   type: "LOCK-RESPONSE",
