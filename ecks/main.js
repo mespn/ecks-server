@@ -40,25 +40,31 @@ function loadTweets () {
         auth = tweet_object.author;
         cont = tweet_object.content;
 
-        gen_div = `<li class = "tweet" id = ${id}> <div class= "tweet-author">${auth}</div> 
+        gen_div = `<li class = "tweet" id = ${id}> <div class="tweet-item">
+        <div class="tweet-info tweet-element">
+        <div class= "tweet-author">${auth}</div> 
         
-        <div class = "tweet-content"><input value = "${cont}"></div> 
+        <div class = "tweet-content"><input class="tweet-txtbx" value = "${cont}"></div> 
+        </div>
         ${updater_button ()}
+        </div>
         </li>`;
         return gen_div;
       }
 
       function updater_button () {
-        return `<button onclick=update_tweet(this.parentNode.getAttribute("id"))>
+        return `<div class = "tweet-element" ><button class="updater" onclick=update_tweet(this.parentNode.getAttribute("id"))>
         Update
-        </button>`;
+        </button></div>`;
       }
 
+      tweetDiv.innerHTML = '<h2> Tweets </h2>';
+
       if (Object.keys (tweetList).length == 0) {
-        tweetDiv.innerHTML =
+        tweetDiv.innerHTML +=
           '<p>There are no tweets here.</p> <p>Post the very first tweet!</p>';
       } else {
-        tweetDiv.innerHTML = '<ul>';
+        tweetDiv.innerHTML += '<ul>';
 
         for (i in tweetList) {
           tweetDiv.innerHTML += tweet_item (i, tweetList[i]);

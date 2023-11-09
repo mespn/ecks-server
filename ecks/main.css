@@ -1,9 +1,43 @@
 div {
 	font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
-	font-size: 20;
+	font-size: 12;
+	width: 80%;
+}
+
+li {
+	list-style-type: none;
 }
 
 h1 {
 	font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
 	font-size: 32;
 }
+
+.tweet-item {
+	border: 3px solid #222;
+	padding: 20px;
+}
+
+/* .tweet-info {
+	margin-left: 1em;
+	margin-bottom: 0.5em;
+	width: 60%;
+}
+
+.tweet-txtbx {
+	margin: 0em auto 0.5em auto;
+	width: 80%;
+} */
+
+.tweet-element {
+	width: 50%;
+	float: left;
+	padding: 20px;
+	border: 2px solid red;
+}
+
+/* .updater {
+	position: relative;
+	width: 40%;
+	height: 80%;
+} */
