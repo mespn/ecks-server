@@ -165,7 +165,7 @@ def handle_api(client_socket, request):
                 print("Got to web_server.create_tweet")
                 create_tweet(client_socket, request["Content"], cookies)
         
-        elif "api/tweet" in clean_path:
+        elif clean_path.startswith("api/tweet"):
             tweet_id = clean_path.split("/")[-1]
             print("updater is in tweet: %s" % tweet_id)
             if request["Method"] == "PUT":
