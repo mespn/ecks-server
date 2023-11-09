@@ -5,7 +5,6 @@ import os
 import json
 import traceback
 import uuid
-import re
 from http_parser import *
 from http_responses import response_header, full_header, full_response, api_header
 from http_exceptions import *
