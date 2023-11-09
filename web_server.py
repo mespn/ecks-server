@@ -2,6 +2,7 @@ import socket
 import threading
 import sys
 import os
+import json
 import traceback
 import uuid
 import re
@@ -9,6 +10,7 @@ from http_parser import *
 from http_responses import response_header, full_header, full_response, api_header
 from http_exceptions import *
 from db_comms import Database
+import http_dictionaries
 
 # -------------------------------------------------
 # find_file(path)
@@ -49,6 +51,7 @@ def check_is_directory(path):
     return path
 
 def send_response(socket, message):
+    # print("Message sent is:", message.decode())
     socket.sendall(b"".join((message, b"\r\n")))
 
 def send_head(socket, path, code = 200):
@@ -58,6 +61,29 @@ def send_head(socket, path, code = 200):
 def send_body(socket, path, code = 200):
     message = full_response(code, path)
     send_response(socket, message)
+
+def send_inline_body(socket, content, content_type = http_dictionaries.MIME_TYPES[".json"], code = 200):
+    message = b"".join((response_header(code), b"Content-Type: " + content_type.encode() + b"\r\nContent-Length: " + str(len(content)).encode()))
+    message += b"".join((b"\r\n\r\n", content))
+    send_response(socket, message)
+
+def get_tweets(client_socket):
+    resp = json.loads(Database.get_tweets())
+
+    if resp["type"] == "GET-RESPONSE":
+        tweets = json.dumps(resp["db"]).encode()
+        send_inline_body(client_socket, tweets)
+    else:
+        raise InternalError
+    
+def create_tweet(client_socket, tweet_cont, cookies):
+    resp = Database.set_tweet(tweet = tweet_cont, cookie= cookies)
+    print(resp)
+    send_inline_body(client_socket, resp)
+
+def update_tweet(client_socket, tweet_id, req_content, cookies):
+    resp = Database.update_tweet(tweet_id, req_content, cookies)
+    send_inline_body(client_socket, resp)
 
 def send_error(socket, error_code, server_path = None):
     error_code = str(error_code)
@@ -127,25 +153,30 @@ def handle_api(client_socket, request, db_socket = None):
     else:
         try:
             cookies = parse_cookie(request["Cookie"])
-
-            if "sessionID" not in cookies.keys():
-                raise ForbiddenError
-
-            if clean_path == "api/tweet":
-                if request["Method"] == "GET":
-                    Database.get_tweets()
-                elif request["Method"] == "POST":
-                    Database.set_tweet(tweet_id, request)
-            
-            elif re.match("^api\/login\/.*$",clean_path):
-                tweet_id = clean_path.split("/")[-1]
-                if request["Method"] == "PUT":
-                    Database.set_tweet(db_socket, request, tweet_id)
-            else:
-                send_error(client_socket, 400)
-
         except KeyError:
             raise ForbiddenError
+
+        if "sessionID" not in cookies.keys():
+            raise ForbiddenError
+
+        if clean_path == "api/tweet":
+            if request["Method"] == "GET":
+                get_tweets(client_socket)
+            elif request["Method"] == "POST":
+                print("Got to web_server.create_tweet")
+                create_tweet(client_socket, request["Content"], cookies)
+        
+        elif "api/tweet" in clean_path:
+            tweet_id = clean_path.split("/")[-1]
+            print("updater is in tweet: %s" % tweet_id)
+            if request["Method"] == "PUT":
+                print("updating...")
+                print(request.keys())
+                update_tweet(client_socket, tweet_id, request["Content"], cookies)
+        else:
+            print ("request is", request["Method"], clean_path)
+            raise BadRequestError
+
         
 
 # -------------------------------------------------
@@ -174,6 +205,11 @@ def handle_client(sock: socket.socket, server_path: str):
             return
         
         except TypeError:
+            print("This is a type error")
+            traceback.print_exc()
+            raise InternalError
+        
+        except InternalError:
             send_error(sock, 500, server_path)
             return
         
@@ -182,6 +218,7 @@ def handle_client(sock: socket.socket, server_path: str):
             return
         
         except ForbiddenError:
+            print("Needs to log in")
             send_error(sock, 401, server_path)
             return
     else:
@@ -223,16 +260,6 @@ def main(args):
         except BrokenPipeError as e:
             print("Connection was lost", e)
             continue
-            
-        except MemoryError as e:
-            print(e)
-            traceback.print_exc()
-            sys.exit(1)
-        
-        except RuntimeError as e:
-            print("Thread limit:",threading.active_count())
-            print("Exception thread:",threading.current_thread())
-            sys.exit(1)
 
         except Exception as e:
             print("Something happened...: ", e)

@@ -1,0 +1,14 @@
+{
+    "key1": {
+        "author": "Manu",
+        "content": "Hello World"
+    },
+    "key2": {
+        "author": "other user",
+        "content": "test 2"
+    },
+    "key3": {
+        "author": "avadvasd",
+        "content": "third tweet"
+    }
+}
