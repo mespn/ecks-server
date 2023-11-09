@@ -80,8 +80,8 @@ def create_tweet(client_socket, tweet_cont, cookies):
     print(resp)
     send_inline_body(client_socket, resp)
 
-def update_tweet(client_socket, tweet_id, req_content, cookies):
-    resp = Database.update_tweet(tweet_id, req_content, cookies)
+def update_tweet(client_socket, tweet_id, req_body, cookies):
+    resp = Database.update_tweet(tweet_id, req_body, cookies)
     send_inline_body(client_socket, resp)
 
 def send_error(socket, error_code, server_path = None):
