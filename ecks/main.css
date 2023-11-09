@@ -6,6 +6,7 @@ div {
 
 li {
 	list-style-type: none;
+	margin: 0.5em;
 }
 
 h1 {
@@ -14,30 +15,31 @@ h1 {
 }
 
 .tweet-item {
-	border: 3px solid #222;
-	padding: 20px;
+	display: flex;
+	border: 2px solid #444;
+	padding: 1em;
 }
 
-/* .tweet-info {
-	margin-left: 1em;
-	margin-bottom: 0.5em;
+.tweet-info {
+	flex: 2;
 	width: 60%;
 }
 
-.tweet-txtbx {
-	margin: 0em auto 0.5em auto;
-	width: 80%;
-} */
-
-.tweet-element {
-	width: 50%;
-	float: left;
-	padding: 20px;
-	border: 2px solid red;
+.tweet-author {
+	margin-bottom: 5px;
 }
 
-/* .updater {
-	position: relative;
-	width: 40%;
-	height: 80%;
-} */
+.tweet-txtbx {
+	width: 100%;
+	height: 100%;
+}
+
+.updater-div {
+	flex: 1;
+	padding: 0.5em;
+}
+
+.updater {
+	height: 100%;
+	width: 100%;
+}

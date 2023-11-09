@@ -53,7 +53,7 @@ function loadTweets () {
       }
 
       function updater_button () {
-        return `<div class = "tweet-element" ><button class="updater" onclick=update_tweet(this.parentNode.getAttribute("id"))>
+        return `<div class = "updater-div" ><button class="updater" onclick=update_tweet(this.parentNode.getAttribute("id"))>
         Update
         </button></div>`;
       }
