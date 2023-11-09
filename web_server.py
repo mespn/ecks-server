@@ -67,7 +67,7 @@ def send_inline_body(socket, content, content_type = http_dictionaries.MIME_TYPE
     send_response(socket, message)
 
 def get_tweets(client_socket):
-    resp = json.loads(Database.get_tweets())
+    resp = Database.get_tweets()
 
     if resp["type"] == "GET-RESPONSE":
         tweets = json.dumps(resp["db"]).encode()
@@ -76,12 +76,14 @@ def get_tweets(client_socket):
         raise InternalError
     
 def create_tweet(client_socket, tweet_cont, cookies):
-    resp = Database.set_tweet(tweet = tweet_cont, cookie= cookies)
+    resp = Database.create_tweet(tweet = tweet_cont, cookie= cookies)
     print(resp)
+    resp = json.dumps(resp).encode()
     send_inline_body(client_socket, resp)
 
 def update_tweet(client_socket, tweet_id, req_body, cookies):
     resp = Database.update_tweet(tweet_id, req_body, cookies)
+    resp = json.dumps(resp).encode()
     send_inline_body(client_socket, resp)
 
 def send_error(socket, error_code, server_path = None):

@@ -17,7 +17,7 @@ class Database():
             raise InternalError
     
     def get_tweets():
-        message = messages.get_tweets()
+        message = messages.get_database()
         resp = Database.exchange_message(message)
         resp = json.loads(resp)
         return resp
@@ -26,8 +26,8 @@ class Database():
         auth = cookie["username"]
         cont = tweet["Content"]
         message = messages.create_tweet(auth, cont)
-        Database.exchange_message(message)
-        resp = json.loads(Database.receive_message())
+        resp =Database.exchange_message(message)
+        resp = json.loads(resp)
         if resp["type"] == "SET-RESPONSE":
             return resp
         elif resp["type"] == "ERROR":
@@ -38,6 +38,7 @@ class Database():
         cont = tweet["Content"]
         message = messages.update_tweet(id, auth, cont)
         resp = Database.exchange_message(message)
+        resp = json.loads(resp)
         if resp["type"] == "SET-RESPONSE":
             return resp
         else:
@@ -47,12 +48,25 @@ class Database():
 def main():
 
     # t_id = "other_key"
-    # cookie = {"username":"manuel", "session-id":"agafvDASASDCa-fasdf"}
+    cookie = {"username":"manuel", "session-id":"agafvDASASDCa-fasdf"}
     # tweet = "Holi serv!"
 
     # Database.set_tweet(t_id, tweet, cookie)
+    tt = {"Content":""}
 
-    print(Database.get_tweets())
+    tt["Content"] = "Quiero probar esto"
+    print(Database.create_tweet(tt, cookie))
+
+    tt["Content"] = "Segundo Tweet"
+    print(Database.create_tweet(tt, cookie))
+
+    tweets = Database.get_tweets()
+
+    print(tweets)
+    print()
+    print("The tweets are: ")
+    for i in tweets["db"].keys():
+        print(i, tweets["db"][i])
 
 
 if __name__ == "__main__":
