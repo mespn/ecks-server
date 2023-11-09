@@ -1,11 +1,15 @@
 from http_exceptions import BadRequestError
+import json
 
 def parse_content(content_string: str):
-    cont_dict = {}
-    pairs = content_string.split("&")
-    for i in pairs:
-        (key,value) = i.split("=")
-        cont_dict[key] = value
+    try:
+        cont_dict = json.loads(content_string)
+    except:
+        cont_dict = {}
+        pairs = content_string.split("&")
+        for i in pairs:
+            (key,value) = i.split("=")
+            cont_dict[key] = value
     return cont_dict
 
 def check_format(request):
@@ -29,7 +33,7 @@ def check_format(request):
         
 def parse_cookie(cookie_str):
     cookie_dict = {}
-    cookies = cookie_str.split(";")
+    cookies = cookie_str.split("; ")
     for i in cookies:
         try:
             (key, value) = i.split("=")
