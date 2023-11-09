@@ -8,7 +8,7 @@ def get_database():
     return json.dumps(msg_dict).encode()
 
 def set_tweet(id, tweet):
-    msg_dict = {"type":"SET", "id":id, "obj": tweet}
+    msg_dict = {"type":"SET", "id":id, "content": tweet}
     return json.dumps(msg_dict).encode()
 
 def lock():
