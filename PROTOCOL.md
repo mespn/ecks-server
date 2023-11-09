@@ -87,7 +87,7 @@
 { 
   type: "SET",
   id: tweet_id,
-  content: tweet
+  obj: tweet
 }
 ```
 
