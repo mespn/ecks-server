@@ -1,67 +1,47 @@
 import socket
 import json
+from http_exceptions import *
+import database.messages as messages
 
 class Database():
     HOST = "localhost"
     PORT = 7999
 
-    db_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-    def connect_socket():
+    def exchange_message(msg):
         try:
-            Database.db_socket.connect((Database.HOST, Database.PORT))
-        except OSError as e:
-            pass
-
-    def send_message(message:bytes):
-        try:
-            Database.db_socket.sendall(message)
-        except OSError:
-            Database.connect_socket();
-            Database.send_message(message)
-
-    def receive_message(size: int = 1024):
-        return Database.__rec_message(0, size)
-    
-    def __rec_message(num, size):
-        if num < 2:
-            try:
-                data = Database.db_socket.recv(size)
-            except ConnectionError as e:
-                print(type(e), e)
-                Database.connect_socket()
-                data = Database.__rec_message(num+1,size)
-            return data
-        else: return b"{}"
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as db_socket:
+                db_socket.connect((Database.HOST, Database.PORT))
+                db_socket.sendall(msg)
+                return db_socket.recv(1024)
+        except:
+            raise InternalError
     
     def get_tweets():
-        msg_dict = {"type": "GET"}
-        message = json.dumps(msg_dict).encode()
-        Database.send_message(message);
-        resp = Database.receive_message()
+        message = messages.get_tweets()
+        resp = Database.exchange_message(message)
         resp = json.loads(resp)
-        try:
-            if resp['type'] == "GET-RESPONSE":
-                if resp["payload-type"] == "DB":
-                    return resp["db"]
-            else:
-                return None
-        except KeyError:
-            return None
+        return resp
     
-    def set_tweet(tweet_id, tweet, cookie):
-        msg_dict = {"type":"SET",
-                    "key": tweet_id,
-                    "author": cookie["username"],
-                    "value": tweet}
-        message = json.dumps(msg_dict).encode()
-        Database.send_message(message)
+    def create_tweet(tweet, cookie):    
+        auth = cookie["username"]
+        cont = tweet["Content"]
+        message = messages.create_tweet(auth, cont)
+        Database.exchange_message(message)
         resp = json.loads(Database.receive_message())
         if resp["type"] == "SET-RESPONSE":
-            return resp["success"]
-        else:
-            return False
+            return resp
+        elif resp["type"] == "ERROR":
+            raise InternalError
         
+    def update_tweet(id, tweet, cookie):
+        auth = cookie["username"]
+        cont = tweet["Content"]
+        message = messages.update_tweet(id, auth, cont)
+        resp = Database.exchange_message(message)
+        if resp["type"] == "SET-RESPONSE":
+            return resp
+        else:
+            raise InternalError
         
 
 def main():
