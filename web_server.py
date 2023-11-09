@@ -169,8 +169,6 @@ def handle_api(client_socket, request):
             tweet_id = clean_path.split("/")[-1]
             print("updater is in tweet: %s" % tweet_id)
             if request["Method"] == "PUT":
-                print("updating...")
-                print(request.keys())
                 update_tweet(client_socket, tweet_id, request["Content"], cookies)
         else:
             print ("request is", request["Method"], clean_path)
