@@ -2,6 +2,8 @@ import socket
 import sys
 import select
 import json
+import threading
+import messages
 
 class Coordinator:
     def __init__(self, workers: list):
@@ -25,15 +27,37 @@ class Coordinator:
         
         self.run_server()
 
+    def __lock_participant(connection, lst, index):
+        connection.sendall(messages.lock())
+        try:
+            lst[index] = json.loads(connection.recv(1024).decode())
+        except ConnectionError as e:
+            err_msg = messages.error("SERVER", e)
+            connection.sendall(err_msg)
+
     def handle_request(self, sock, request):
         parsed_request = json.loads(request)
         if parsed_request["type"] == "GET":
             sock.sendall(self.get_db(request))
         elif parsed_request["type"] == "SET":
-            # TODO: Implement 2PC 
-            pass
+            num_workers = len(self.workers)
+            vote_reqs = [None] * num_workers
+            vote_resps = [None] * num_workers
+            for i in range(num_workers):
+                conn = self.workers[i]
+                vote_reqs[i] = threading.Thread(target=Coordinator.__lock_participant, args=(conn, vote_resps, i))
+                vote_reqs[i].start()
+
+            for thread in vote_reqs:
+                thread.join()
+
+            for i in num_workers:
+                if self.locked(vote_resps):
+                    for j in num_workers:
+                        # TODO
+                        pass
         else:
-            sock.sendall(self.unknown_request())
+            sock.sendall(messages.server_error("Server"))
 
     def get_db(self, req):
         self.workers[self.onDuty].sendall(req)
@@ -42,9 +66,6 @@ class Coordinator:
         self.onDuty %= len(self.workers)
         return data
 
-    def unknown_request(self):
-        # TODO
-        pass
 
     def run_server(self):
         myReadables = [self.server_socket, ] # not transient
