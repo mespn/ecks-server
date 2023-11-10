@@ -25,7 +25,8 @@ class Database():
     def create_tweet(tweet, cookie):    
         auth = cookie["username"]
         cont = tweet["Content"]
-        message = messages.create_tweet(auth, cont)
+        twt = messages.tweet_obj(auth, cont)
+        message = messages.set_tweet("", twt)
         resp =Database.exchange_message(message)
         resp = json.loads(resp)
         if resp["type"] == "SET-RESPONSE":
@@ -36,7 +37,8 @@ class Database():
     def update_tweet(id, tweet, cookie):
         auth = cookie["username"]
         cont = tweet["Content"]
-        message = messages.update_tweet(id, auth, cont)
+        twt = messages.tweet_obj(auth, cont)
+        message = messages.set_tweet(id, twt)
         resp = Database.exchange_message(message)
         resp = json.loads(resp)
         if resp["type"] == "SET-RESPONSE":

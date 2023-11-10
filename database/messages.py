@@ -15,16 +15,6 @@ def set_tweet(tweet_id, obj):
 def lock(tweet_id):
     msg_dict = {"type":"LOCK", "id":tweet_id}
     return json.dumps(msg_dict).encode()
-
-# Web Server -> DB Server
-def create_tweet(author, tweet):
-    msg_dict = {"type":"SET", "author":author, "content":tweet}
-    return json.dumps(msg_dict).encode()
-
-def update_tweet(tweet_id, author, tweet):
-    msg_dict = {"type":"UPDATE", "id":tweet_id, "author":author, "content":tweet}
-    return json.dumps(msg_dict).encode()
-
 # ====================================================================================
 # Responses
 def response_get(db):
@@ -52,3 +42,6 @@ def internal_error(dets):
 
 def request_error(dets = "Bad request"):
     return error("REQUEST", dets)
+
+def tweet_obj(author, content):
+    return {"author":author, "content":content}

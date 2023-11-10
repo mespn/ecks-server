@@ -1,11 +1,12 @@
 #!/bin/bash
 
 # Change this!
-PORT=7999
+HOST="cormorant.cs.umanitoba.ca"
+PORT=8991
 
 for item in `seq 1 30`
 do
-    (echo '{"type":"SET", "key":"key '${item}'", "value":"value '$item'"}' | nc -w4 localhost $PORT) &
+    (echo '{"type":"SET", "id":"key '${item}'", "obj":"value '$item'"}' | nc -w4 $HOST $PORT) &
 done
 wait
 echo "Done setting. Should have taken less than four seconds"
@@ -14,14 +15,14 @@ echo "Done setting. Should have taken less than four seconds"
 
 for item in `seq 1 30`
 do
-    (echo '{"type":"SET", "key":"key '${item}'", "value":"updated value '$item'"}' | nc -w4 localhost $PORT) &
+    (echo '{"type":"SET", "id":"key '${item}'", "obj":"updated value '$item'"}' | nc -w4 $HOST $PORT) &
 done
 wait
 echo "Done updating. Should have taken less than four seconds"
 
 # get them all (any order)
 
-echo '{"type":"GET-DB"}' | nc -w1 localhost $PORT
+echo '{"type":"GET"}' | nc -w1 localhost $PORT
 
 wait
 echo "Done"

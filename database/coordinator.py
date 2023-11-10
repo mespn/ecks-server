@@ -105,12 +105,14 @@ class Coordinator:
             if parsed_request["type"] == "GET":
                 sock.sendall(self.get_db())
             elif parsed_request["type"] == "SET":
-                tweet_tweet_id = str(uuid.uuid4())
-                obj = {"content": parsed_request["content"], "author":parsed_request["author"]} 
-                sock.sendall(self.set_tweet(tweet_tweet_id, obj))
-            elif parsed_request["type"] == "UPDATE":
-                obj = {"content": parsed_request["content"], "author":parsed_request["author"]} 
-                sock.sendall(self.set_tweet(parsed_request["id"], obj))
+                if parsed_request["id"]=="":
+                    tweet_id = str(uuid.uuid4())
+                else:
+                    tweet_id = parsed_request["id"]
+
+                obj = parsed_request["obj"] 
+                sock.sendall(self.set_tweet(tweet_id, obj))
+
             else:
                 sock.sendall(messages.request_error())
         except Exception as e:
