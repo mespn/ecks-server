@@ -4,7 +4,7 @@
 
 This program is made of 4 parts, 3 of which are in their own directory.
 
-The parent directory is the web server. It contains the directories with 
+The parent directory is the web server. It contains the directories with
 
 - the frontend files (ecks)
 - the database files (database)
@@ -17,7 +17,7 @@ are meant to be ran from the parent directory
 
 - Web server `python ./web_server.py [database_host]`
 - Database coordinator `python ./database/coordinator.py [worker_host:port]`
-- Database workers `python ./database/coordinator.py [port]` 
+- Database workers `python ./database/coordinator.py [port]`
 
 ### Notes
 
