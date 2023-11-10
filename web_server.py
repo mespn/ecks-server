@@ -222,12 +222,15 @@ def handle_client(sock: socket.socket, server_path: str):
     else:
         return
     
-def main(args):
+def main(db_host):
     PATH = os.path.abspath("ecks")
 
     # address constants
     HOST = ""
-    PORT = 8890
+    PORT = 8990
+
+
+    Database.HOST = db_host
 
     # set socket
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -264,4 +267,8 @@ def main(args):
             continue
 
 if __name__ == '__main__':
-    main(sys.argv)
+    try:
+        db_host = sys.argv[1]
+    except:
+        db_host = "localhost"
+    main(db_host)
