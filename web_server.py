@@ -79,7 +79,7 @@ def create_tweet(client_socket, tweet_cont, cookies):
     resp = Database.create_tweet(tweet = tweet_cont, cookie= cookies)
     print(resp)
     resp = json.dumps(resp).encode()
-    send_inline_body(client_socket, resp)
+    send_inline_body(client_socket, resp, code=500)
 
 def update_tweet(client_socket, tweet_id, req_body, cookies):
     resp = Database.update_tweet(tweet_id, req_body, cookies)
@@ -164,7 +164,6 @@ def handle_api(client_socket, request):
             if request["Method"] == "GET":
                 get_tweets(client_socket)
             elif request["Method"] == "POST":
-                print("Got to web_server.create_tweet")
                 create_tweet(client_socket, request["Content"], cookies)
         
         elif clean_path.startswith("api/tweet"):
@@ -189,6 +188,7 @@ def handle_api(client_socket, request):
 # -------------------------------------------------
 
 def handle_client(sock: socket.socket, server_path: str):
+    
     data = sock.recv(1024)
     if data:
         try:
@@ -227,7 +227,7 @@ def main(args):
 
     # address constants
     HOST = ""
-    PORT = 8200
+    PORT = 8890
 
     # set socket
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -240,7 +240,6 @@ def main(args):
     while True:
         try:
             (conn, addr) = server_socket.accept()
-            conn.settimeout(5)
             aThread = threading.Thread(target = handle_client, args = (conn, PATH))
             aThread.start()
             

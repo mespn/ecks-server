@@ -4,8 +4,8 @@ from http_exceptions import *
 import database.messages as messages
 
 class Database():
-    HOST = "localhost"
-    PORT = 7999
+    HOST = "localhost"#"kingfisher.cs.umanitoba.ca"
+    PORT = 8991
 
     def exchange_message(msg):
         try:

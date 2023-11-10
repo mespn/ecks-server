@@ -53,9 +53,9 @@ function loadTweets () {
       }
 
       function updater_button () {
-        return `<div class = "updater-div" ><button class="updater" onclick=update_tweet(this.parentNode.getAttribute("id"))>
+        return `<button class="updater updater-div" onclick=update_tweet(this.parentNode.parentNode.getAttribute("id"))>
         Update
-        </button></div>`;
+        </button>`;
       }
 
       tweetDiv.innerHTML = '<h2> Tweets </h2>';
@@ -105,6 +105,7 @@ function post_tweet () {
   function confirm_posting () {
     textbox.value = '';
     if (tweet_poster.status == 401) {
+      console.log ('Post failed with status 401');
       showLoginPage ();
     } else {
       if (JSON.parse (tweet_poster.responseText).success) {
@@ -144,10 +145,10 @@ function update_tweet (id) {
   new_val = {
     Content: document
       .getElementById (id)
+      .getElementsByClassName ('tweet-info')[0]
       .getElementsByClassName ('tweet-content')[0].firstChild.value,
   };
 
   update_req.open ('PUT', `/api/tweet/${id}`);
-  console.log ('New_val=', new_val);
   update_req.send (JSON.stringify (new_val));
 }

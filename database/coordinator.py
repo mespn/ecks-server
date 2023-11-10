@@ -3,71 +3,137 @@ import sys
 import select
 import json
 import threading
+import uuid
 import messages
+import traceback
 
 class Coordinator:
     def __init__(self, workers: list):
-        self.PORT = 7999
+        self.PORT = 8991
 
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-        self.server_socket.bind(("", self.PORT))
-        self.server_socket.listen
-
         self.onDuty = 0 # Which worker to ask for the db
-        self.workers = []
+        self.worker_addresses = []
         
         for i in workers:
-            connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            (host, port) = i.split(':')
-            work_addr = (host, int(port))
-            connection.connect(work_addr)
-            self.workers.append(connection)
+            addr = i.split(':')
+            addr[1] = int(addr[1])
+            print("Registering worker at", addr)
+            self.worker_addresses.append(tuple(addr))
         
         self.run_server()
 
-    def __lock_participant(connection, lst, index):
-        connection.sendall(messages.lock())
+    def __lock_participant(self, tweet_id, lst, index):
         try:
-            lst[index] = json.loads(connection.recv(1024).decode())
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as worker_socket:
+                worker_socket.connect(self.worker_addresses[index])
+                worker_socket.sendall(messages.lock(tweet_id))
+                data = worker_socket.recv(1024)
+                lst[index] = json.loads(data)
         except ConnectionError as e:
-            err_msg = messages.error("SERVER", e)
-            connection.sendall(err_msg)
+            err_msg = messages.internal_error("Could not reach worker")
+            lst[index] = err_msg
+        return
 
-    def handle_request(self, sock, request):
-        parsed_request = json.loads(request)
-        if parsed_request["type"] == "GET":
-            sock.sendall(self.get_db(request))
-        elif parsed_request["type"] == "SET":
-            num_workers = len(self.workers)
-            vote_reqs = [None] * num_workers
-            vote_resps = [None] * num_workers
+    def __send_set(self, tweet_id, obj, lst, index):
+        print("Sending tweet", tweet_id)
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as worker_socket:
+                worker_socket.connect(self.worker_addresses[index])
+                worker_socket.sendall(messages.set_tweet(tweet_id, obj))
+                lst[index] = json.loads(worker_socket.recv(1024))
+        except ConnectionError as e:
+            lst[index] = messages.internal_error("Could not reach worker")
+            return
+        except Exception as e:
+            lst[index] = messages.internal_error(e)
+        return
+
+    def set_tweet(self, tweet_id, obj):
+        try:
+            num_workers = len(self.worker_addresses)
+
+            worker_threads = [None] * num_workers
+            resps = [None]*num_workers
+
+            # Locking
             for i in range(num_workers):
-                conn = self.workers[i]
-                vote_reqs[i] = threading.Thread(target=Coordinator.__lock_participant, args=(conn, vote_resps, i))
-                vote_reqs[i].start()
-
-            for thread in vote_reqs:
+                worker_threads[i] = threading.Thread(target=self.__lock_participant, args=(tweet_id, resps, i))
+                worker_threads[i].start()
+            
+            for thread in worker_threads:
                 thread.join()
 
-            for i in num_workers:
-                if self.locked(vote_resps):
-                    for j in num_workers:
-                        # TODO
-                        pass
-        else:
-            sock.sendall(messages.server_error("Server"))
+            correct = 0
+            for i in resps:
+                if i["type"] == "LOCK-RESPONSE" and i["success"]:
+                    correct += 1
 
-    def get_db(self, req):
-        self.workers[self.onDuty].sendall(req)
-        data = self.workers[self.onDuty].recv(1024)
+
+            # committing
+            if correct == num_workers:
+                resps = [None]*num_workers
+                for i in range(num_workers):
+                    print(i)
+                    worker_threads[i] = threading.Thread(target=self.__send_set, args=(tweet_id, obj, resps, i))
+                    print("created thread")
+                    worker_threads[i].start()
+        
+                for thread in worker_threads:
+                    thread.join(1)
+
+                if None in resps:
+                    raise ConnectionError
+            
+            resp_msg = messages.response_set(True)
+        
+        except Exception as e:
+            resp_msg = messages.response_set(False)
+        
+        return resp_msg
+
+    def handle_request(self, sock, request):
+        try:
+            parsed_request = json.loads(request)
+        except Exception as e:
+            print(e)
+            sock.send(messages.request_error("Request is %s \nand has the exception %s"%(request, e.__str__())))
+            return
+        try:
+            if parsed_request["type"] == "GET":
+                sock.sendall(self.get_db())
+            elif parsed_request["type"] == "SET":
+                tweet_tweet_id = str(uuid.uuid4())
+                obj = {"content": parsed_request["content"], "author":parsed_request["author"]} 
+                sock.sendall(self.set_tweet(tweet_tweet_id, obj))
+            elif parsed_request["type"] == "UPDATE":
+                obj = {"content": parsed_request["content"], "author":parsed_request["author"]} 
+                sock.sendall(self.set_tweet(parsed_request["id"], obj))
+            else:
+                sock.sendall(messages.request_error())
+        except Exception as e:
+            # traceback.print_exc()
+            print(e)
+            sock.sendall(messages.internal_error(e.__str__()))
+
+    def get_db(self):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as worker_socket:
+            address = self.worker_addresses[self.onDuty]
+            worker_socket.connect(tuple(address))
+            worker_socket.sendall(messages.get_database())
+            data = worker_socket.recv(1024)
+
         self.onDuty += 1
-        self.onDuty %= len(self.workers)
+        self.onDuty %= len(self.worker_addresses)
         return data
 
 
     def run_server(self):
+        self.server_socket.bind(("", self.PORT))
+        self.server_socket.listen()
+        
         myReadables = [self.server_socket, ] # not transient
         myWriteables = []
 
@@ -77,16 +143,12 @@ class Coordinator:
                 readable, writeable, exceptions = select.select(
                     myReadables + myClients,
                     [],
-                    myReadables,
-                    5
+                    myReadables
                 )
-                print('released from block')
                 for eachSocket in readable:
                     if eachSocket is self.server_socket:
                         # new client
-
-                        conn, addr = self.server_socket.accept()
-                        print('Connected by', addr)
+                        (conn, addr) = self.server_socket.accept()
                         myClients.append(conn)
                         #... read handled by select, and ... later
                     elif eachSocket in myClients:
@@ -99,7 +161,6 @@ class Coordinator:
                         else:
                             # close this client....
                             # they are closing on us!
-                            print("Removing client")
                             myClients.remove(eachSocket)
                 
                 for problem in exceptions:
@@ -118,6 +179,8 @@ class Coordinator:
                 sys.exit(0)
             except Exception as e:
                 print("Something happened... I guess...")
-                print(e)        
+                # traceback.print_exc()
+                
 
-Coordinator(sys.argv[1:]).run_server()
+coord = Coordinator(sys.argv[1:])
+coord.run_server()

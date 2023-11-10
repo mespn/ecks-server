@@ -94,7 +94,8 @@
 ### Start Two-Phase-Commit
 
 ``` json
-{type: "LOCK"}
+{type: "LOCK",
+id: tweet_id}
 ```
 
 ---

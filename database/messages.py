@@ -7,12 +7,13 @@ def get_database():
     msg_dict = {"type":"GET"}
     return json.dumps(msg_dict).encode()
 
-def set_tweet(id, tweet):
-    msg_dict = {"type":"SET", "id":id, "content": tweet}
+def set_tweet(tweet_id, obj):
+    print(tweet_id, obj)
+    msg_dict = {"type":"SET", "id":tweet_id, "obj": obj}
     return json.dumps(msg_dict).encode()
 
-def lock():
-    msg_dict = {"type":"LOCK"}
+def lock(tweet_id):
+    msg_dict = {"type":"LOCK", "id":tweet_id}
     return json.dumps(msg_dict).encode()
 
 # Web Server -> DB Server
@@ -20,8 +21,8 @@ def create_tweet(author, tweet):
     msg_dict = {"type":"SET", "author":author, "content":tweet}
     return json.dumps(msg_dict).encode()
 
-def update_tweet(id, author, tweet):
-    msg_dict = {"type":"UPDATE", "id":id, "author":author, "content":tweet}
+def update_tweet(tweet_id, author, tweet):
+    msg_dict = {"type":"UPDATE", "id":tweet_id, "author":author, "content":tweet}
     return json.dumps(msg_dict).encode()
 
 # ====================================================================================
@@ -49,5 +50,5 @@ def error(scope, dets):
 def internal_error(dets):
     return error("SERVER", dets)
 
-def request_error(dets):
+def request_error(dets = "Bad request"):
     return error("REQUEST", dets)
