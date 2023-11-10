@@ -3,3 +3,6 @@ class BadRequestError(Exception):
 
 class InternalError(Exception):
     pass
+
+class ForbiddenError(Exception):
+    pass
